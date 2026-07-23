@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gold Price Trend</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #fff7e6;
+        --card: #ffffff;
+        --gold: #d99a00;
+        --gold-dark: #a66d00;
+        --text: #2d2415;
+        --muted: #7d705d;
+        --danger: #b42318;
+        --shadow: 0 20px 60px rgba(91, 60, 0, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 217, 102, 0.42), transparent 34rem),
+          linear-gradient(135deg, #fff8e8 0%, #fffdf7 48%, #fff0c2 100%);
+      }
+
+      .page {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 48px 0;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: flex-end;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(30px, 5vw, 54px);
+        letter-spacing: -0.04em;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(217, 154, 0, 0.18);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+
+      .login-card {
+        width: min(440px, 100%);
+        margin: 12vh auto 0;
+        padding: 32px;
+      }
+
+      .login-card h1 {
+        font-size: 30px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+        margin: 24px 0 16px;
+      }
+
+      label {
+        font-weight: 700;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid rgba(45, 36, 21, 0.16);
+        border-radius: 14px;
+        font-size: 16px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        color: var(--gold-dark);
+        background: #fff4cf;
+      }
+
+      button.active {
+        color: #fff;
+        background: var(--text);
+      }
+
+      .error {
+        min-height: 22px;
+        color: var(--danger);
+        font-weight: 700;
+      }
+
+      .dashboard {
+        display: none;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .stat {
+        padding: 22px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .stat strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 28px;
+      }
+
+      .chart-card {
+        padding: 24px;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .range-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chart-wrap {
+        height: 520px;
+      }
+
+      @media (max-width: 720px) {
+        .hero,
+        .toolbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .chart-wrap {
+          height: 360px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section id="login" class="card login-card">
+        <h1>Gold Price Trend</h1>
+        <p class="subtitle">Enter the access password configured in the repository Actions Secret.</p>
+        <form id="login-form">
+          <div class="field">
+            <label for="password">Access Password</label>
+            <input id="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit">Open Dashboard</button>
+          <p id="login-error" class="error"></p>
+        </form>
+      </section>
+
+      <section id="dashboard" class="dashboard">
+        <div class="hero">
+          <div>
+            <h1>Shanghai Gold Exchange Price Trend</h1>
+            <p class="subtitle">Data source: Shanghai Gold Exchange Au99.99. The latest 365 days are kept automatically.</p>
+          </div>
+          <button id="logout" class="secondary">Log Out</button>
+        </div>
+
+        <div class="stats">
+          <div class="card stat">
+            <span>Latest Price</span>
+            <strong id="latest-price">--</strong>
+          </div>
+          <div class="card stat">
+            <span>Latest Date</span>
+            <strong id="latest-date">--</strong>
+          </div>
+          <div class="card stat">
+            <span>Record Count</span>
+            <strong id="record-count">--</strong>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="toolbar">
+            <h2>Price Trend Chart</h2>
+            <div class="range-buttons" aria-label="Time range">
+              <button class="range active" data-days="7">Week</button>
+              <button class="range secondary" data-days="31">Month</button>
+              <button class="range secondary" data-days="365">Year</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="gold-chart"></canvas>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const sessionKey = "gold-trend-authenticated";
+      let chart;
+      let prices = [];
+      let config = { accessPasswordHash: "" };
+
+      async function loadJson(path) {
+        const response = await fetch(`${path}?t=${Date.now()}`);
+        if (!response.ok) {
+          throw new Error(`Unable to load ${path}`);
+        }
+        return response.json();
+      }
+
+      async function sha256(text) {
+        const bytes = new TextEncoder().encode(text);
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        return Array.from(new Uint8Array(digest))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      function showDashboard() {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        renderStats();
+        renderChart(7);
+      }
+
+      function renderStats() {
+        const latest = prices.at(-1);
+        document.getElementById("latest-price").textContent = latest ? `${latest.price} CNY/g` : "--";
+        document.getElementById("latest-date").textContent = latest?.date ?? "--";
+        document.getElementById("record-count").textContent = String(prices.length);
+      }
+
+      function renderChart(days) {
+        const visiblePrices = prices.slice(-days);
+        const labels = visiblePrices.map((item) => item.date);
+        const data = visiblePrices.map((item) => item.price);
+        const canvas = document.getElementById("gold-chart");
+
+        if (chart) {
+          chart.destroy();
+        }
+
+        chart = new Chart(canvas, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "Au99.99 Gold Price (CNY/g)",
+                data,
+                borderColor: "#d99a00",
+                backgroundColor: "rgba(217, 154, 0, 0.16)",
+                borderWidth: 3,
+                pointRadius: days > 31 ? 0 : 3,
+                pointHoverRadius: 6,
+                tension: 0.32,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: "index",
+            },
+            plugins: {
+              legend: {
+                display: true,
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => ` ${context.parsed.y} CNY/g`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: {
+                  maxTicksLimit: 12,
+                },
+              },
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  callback: (value) => `${value}`,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      async function init() {
+        try {
+          [config, prices] = await Promise.all([loadJson("config.json"), loadJson("gold_prices.json")]);
+          prices.sort((a, b) => a.date.localeCompare(b.date));
+        } catch (error) {
+          document.getElementById("login-error").textContent = error.message;
+          return;
+        }
+
+        if (sessionStorage.getItem(sessionKey) === "true") {
+          showDashboard();
+        }
+      }
+
+      document.getElementById("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const inputPassword = document.getElementById("password").value;
+        const inputPasswordHash = await sha256(inputPassword);
+        if (inputPasswordHash !== config.accessPasswordHash) {
+          document.getElementById("login-error").textContent = "Incorrect password. Please try again.";
+          return;
+        }
+
+        sessionStorage.setItem(sessionKey, "true");
+        showDashboard();
+      });
+
+      document.getElementById("logout").addEventListener("click", () => {
+        sessionStorage.removeItem(sessionKey);
+        window.location.reload();
+      });
+
+      document.querySelectorAll(".range").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".range").forEach((item) => {
+            item.classList.toggle("active", item === button);
+            item.classList.toggle("secondary", item !== button);
+          });
+          renderChart(Number(button.dataset.days));
+        });
+      });
+
+      init();
+    </script>
+  </body>
+</html>
