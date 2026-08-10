@@ -1233,5 +1233,10 @@
     "date": "2026-08-09",
     "price": 940.01,
     "source": "Shanghai Gold Exchange Au99.99"
+  },
+  {
+    "date": "2026-08-10",
+    "price": 940.01,
+    "source": "Shanghai Gold Exchange Au99.99"
   }
 ]
