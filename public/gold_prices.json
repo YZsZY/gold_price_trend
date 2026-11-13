@@ -1,10 +1,5 @@
 [
   {
-    "date": "2025-11-13",
-    "price": 959.14,
-    "source": "Shanghai Gold Exchange Au99.99"
-  },
-  {
     "date": "2025-11-14",
     "price": 948.03,
     "source": "Shanghai Gold Exchange Au99.99"
@@ -1366,7 +1361,12 @@
   },
   {
     "date": "2026-11-12",
-    "price": 858.0,
+    "price": 851.33,
+    "source": "Shanghai Gold Exchange Au99.99"
+  },
+  {
+    "date": "2026-11-13",
+    "price": 834.6,
     "source": "Shanghai Gold Exchange Au99.99"
   }
 ]
